@@ -38,6 +38,7 @@ class ConfigParms():
         """create breakout groups for event"""
         print("beg event processing")
         self.print_variables()
+        cfg.debug_print()
 
 
 if __name__ == '__main__':

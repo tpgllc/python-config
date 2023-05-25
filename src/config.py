@@ -4,10 +4,10 @@
 #  config.py
 #     in each module, from src import config as cfg
 #     access variables in this module as cfg.xxxxxx
-# 
+#
 #     the breakout_groups.ini file is created in the data directory and can be modified
-#     to reflect the number of groups, attendees size 
-#  
+#     to reflect the number of groups, attendees size
+#
 #  Copyright 2023 cswaim <cswaim@tpginc.net>
 
 # import this module as the first application module:
@@ -17,7 +17,7 @@ import configparser
 from pathlib import Path
 import os
 
-flnm = "breakout_groups.ini"
+flnm = "test_config.cfg"
 wkdir_path = None
 wkdir = None
 srcdir = None
@@ -33,7 +33,7 @@ group_labels = [['group1,group2,group3,group4,group5'],
                 ['blue,red,green,yellow,pink'],
                 ['Portales,Santa Fe,Taos,Chama,Cuba'],
                 ['Elbert,Massive,Harvard,Blanca,La Plata'],
-               ] 
+               ]
 
 # system variables
 sys_version = '0.2'
@@ -43,7 +43,7 @@ sys_group_algorithm_class = "SessionsRandom"
 
 # config obj
 config = None
-# variables calculated by event 
+# variables calculated by event
 sessions = {}
 all_card_interactions = {}
 all_cards = []
@@ -70,7 +70,7 @@ def init():
 def read_config_file(config):
     """read in the breakout_groups.ini file if exists or create it"""
     if Path(f"{datadir}{flnm}").is_file():
-        config.read(f"{datadir}{flnm}") 
+        config.read(f"{datadir}{flnm}")
     else:
         config = set_default_config(config)
         config = write_ini(config)
@@ -80,22 +80,22 @@ def read_config_file(config):
         set_event_variables(config)
         set_default_config(config)
         write_ini(config)
-    
+
     # remove comments from sections to be consistent with data from read
     remove_default_comments(config)
     return config
 
 def set_default_config(config):
     """define the default config file """
-    config['EVENT'] = {'n_attendees': n_attendees, 
+    config['EVENT'] = {'n_attendees': n_attendees,
                          'group_size': group_size,
                          'n_groups': n_groups,
                          'n_sessions': n_sessions,
                         }
 
     if not config.has_section('GROUP_LABELS'):
-        config.add_section('GROUP_LABELS') 
-    config["GROUP_LABELS"].clear()                         
+        config.add_section('GROUP_LABELS')
+    config["GROUP_LABELS"].clear()
     config.set('GROUP_LABELS', '# list labels as session1 = label1,label2,label3...')
     config.set('GROUP_LABELS', '# labels can be different for each breakout session')
     config.set('GROUP_LABELS', '# if no sessions listed, default lable of group1, group2, ... will be used')
@@ -105,27 +105,27 @@ def set_default_config(config):
 
     if not config.has_section('SYSTEM'):
         config.add_section('SYSTEM')
-    config["SYSTEM"].clear()                          
+    config["SYSTEM"].clear()
     config.set('SYSTEM', 'sys_version', str(sys_version))
     config.set('SYSTEM', 'sys_group_algorithm', sys_group_algorithm)
     config.set('SYSTEM', 'sys_group_algorithm_class', sys_group_algorithm_class)
-                            
+
     return config
 
 def remove_default_comments(config):
     """remove the comments set up in the defaults"""
     for s in config.sections():
         # the key is a tuple (key, value)
-        for key in config[s].items(): 
+        for key in config[s].items():
             if key[0][:1] in config._comment_prefixes:
                 config.remove_option(s, key[0])
-    
+
 def write_ini(config):
     """ write the ini file from the current cfg settings"""
     with open(f"{datadir}{flnm}", 'w') as configfile:
-        config.write(configfile)  
+        config.write(configfile)
     return config
-    
+
 def set_event_variables(config):
     """set the event variables from config for consistant access"""
     global n_attendees, attendees_list, group_size, n_groups, n_sessions
@@ -151,9 +151,9 @@ def gen_attendees_list() -> list:
     return attendees_list
 
 def build_group_labels() -> list:
-    """read group label dict and build a list of lists of the labels for each 
+    """read group label dict and build a list of lists of the labels for each
        group in a session
-       this removes the key from the dict and does not force a naming convention 
+       this removes the key from the dict and does not force a naming convention
        in the ini file
     """
     group_labels = []
