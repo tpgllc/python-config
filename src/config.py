@@ -96,7 +96,7 @@ class ConfigParms:
         else:
             # create the default config file
             config = self.set_default_config(config)
-            config = self.write_cfg(config)
+            self.write_cfg(config)
 
         # if the sys_version is different, write out the new config file
         if not config.has_option('SYSTEM', 'sys_cfg_version') or sys_cfg_version != config.get('SYSTEM', 'sys_cfg_version'):
@@ -107,6 +107,12 @@ class ConfigParms:
         # remove comments from sections to be consistent with data from read
         self.remove_default_comments(config)
         return config
+
+    def write_cfg(self, config):
+        """ write the cfg file from the current cfg settings"""
+        with open(f"{datadir}{cfg_flnm}", 'w') as configfile:
+            config.write(configfile)
+        return
 
     def set_default_config(self, config):
         """define the default config file, adding varibles with default values """
@@ -147,12 +153,6 @@ class ConfigParms:
                 if key[0][:1] in config._comment_prefixes:
                     config.remove_option(s, key[0])
 
-    def write_cfg(self, config):
-        """ write the cfg file from the current cfg settings"""
-        with open(f"{datadir}{cfg_flnm}", 'w') as configfile:
-            config.write(configfile)
-        return config
-
     def set_config_variables(self, config):
         """set the variables from config for consistant access"""
         for sec, vars in self.cfg_values.items():
@@ -178,6 +178,9 @@ class ConfigParms:
                         list_str = config.get(sec, var_name, fallback=globals()[var_name])
                         if type(list_str) == 'str':
                             listitems.append(list_str.split(','))
+                        else:
+                            # if list_str not str, then it is the fallback list
+                            listitems = list_str
                         globals()[var_name] = listitems
                     case 's':
                         globals()[var_name] = config.get(sec, var_name, fallback=globals()[var_name])

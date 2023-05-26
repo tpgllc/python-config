@@ -77,7 +77,7 @@ class TestConfig(unittest.TestCase):
         config.remove_option('MAIN', 'var2')
         config.remove_option("SYSTEM", "sys_var")
         config.set("SYSTEM","sys_cfg_version", new_version)
-        config = cfg.cp.write_cfg(config)
+        cfg.cp.write_cfg(config)
         config = cfg.cp.set_config_variables(config)
         # confirm  var2 has been removed
         assert(config.has_option("MAIN", "var2") == False)
