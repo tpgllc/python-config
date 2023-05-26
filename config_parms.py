@@ -44,8 +44,9 @@ class ConfigParms():
 if __name__ == '__main__':
     """ print the config parms"""
     print("beg config_parms")
-    cp = ConfigParms()
-    cp.run()
+    # cp = ConfigParms(cfg.cfg_values)
+    # cp.run()
+    cfg.cp.debug_print()
     print("end config_parms")
 
 

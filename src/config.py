@@ -5,8 +5,8 @@
 #     in each module, from src import config as cfg
 #     access variables in this module as cfg.xxxxxx
 #
-#     the breakout_groups.ini file is created in the data directory and can be modified
-#     to reflect the number of groups, attendees size
+#     the config file is created in the data directory and can be modified
+#     for a specific run.
 #
 #  Copyright 2023 cswaim <cswaim@tpginc.net>
 
@@ -17,175 +17,208 @@ import configparser
 from pathlib import Path
 import os
 
-flnm = "test_config.cfg"
+cfg_flnm = 'test_config.cfg'
 wkdir_path = None
 wkdir = None
 srcdir = None
 datadir = None
 
-# event variables
-attendees_list = []
-n_attendees = 11
-group_size = 3
-n_groups = 3
-n_sessions = 4
-group_labels = [['group1,group2,group3,group4,group5'],
-                ['blue,red,green,yellow,pink'],
-                ['Portales,Santa Fe,Taos,Chama,Cuba'],
-                ['Elbert,Massive,Harvard,Blanca,La Plata'],
-               ]
+# variables
+var1 = True
+var2 = 2
+var3 = 3.4
+m1 ='textm1'
+m2 = ['m2-1', 'm2-2', 'm2-3']
 
 # system variables
-sys_version = '0.2'
-sys_group_algorithm = "sessions_random"
-sys_group_algorithm_class = "SessionsRandom"
+sys_cfg_version = '0.1'
+sys_var = "sysvar test variable"
+
+# values passed to ConfigParms
+# dict key is the section, value is list of variable names and type
+#   types are i-integer, f-float, b-boolean, s-string, l-list
+
+cfg_values = {'MAIN': [('var1', 'b'), ('var2', 'i'), ('var3', 'f')],
+              'DATA': [('m1', 's'), ('m2', 'l')],
+              'SYSTEM': [('sys_cfg_version', 's'), ('sys_var', 's')],
+              'comments': {'sys_cfg_version': ['changing the version number will cause file to be rewritten'],
+                           'sys_var': ['sys var cmt1', 'sys var cmt2'],
+                           'var1': ['this is a comment for var1'],
+                           'm2': ['m2 comment 1', 'm2 comment 2']}
+              }
 
 
 # config obj
 config = None
-# variables calculated by event
-sessions = {}
-all_card_interactions = {}
-all_cards = []
+# variables passed to all modules
+gen_var1 = []
 
-
-def init():
-    """ on init, read the config file, if not found, write the default file"""
-    global wkdir_path, wkdir, srcdir, datadir, config
-
-    # set the directories
-    if wkdir is None:
-        wkdir_path = Path(__file__).parent.parent.resolve()
-        srcdir = str(Path(__file__).resolve().parent) + os.sep
-        wkdir = str(Path(srcdir).resolve().parent) + os.sep
-        datadir = str(Path(wkdir).resolve()) + os.sep + 'data' + os.sep
-
-    config = configparser.ConfigParser(allow_no_value=True)
-    config = read_config_file(config)
-
-    set_event_variables(config)
-
-    return config
-
-def read_config_file(config):
-    """read in the breakout_groups.ini file if exists or create it"""
-    if Path(f"{datadir}{flnm}").is_file():
-        config.read(f"{datadir}{flnm}")
-    else:
-        config = set_default_config(config)
-        config = write_ini(config)
-
-     # if the sys_version is different, write out the new config file
-    if not config.has_option('SYSTEM', 'sys_version') or sys_version != config.get('SYSTEM', 'sys_version'):
-        set_event_variables(config)
-        set_default_config(config)
-        write_ini(config)
-
-    # remove comments from sections to be consistent with data from read
-    remove_default_comments(config)
-    return config
-
-def set_default_config(config):
-    """define the default config file """
-    config['EVENT'] = {'n_attendees': n_attendees,
-                         'group_size': group_size,
-                         'n_groups': n_groups,
-                         'n_sessions': n_sessions,
-                        }
-
-    if not config.has_section('GROUP_LABELS'):
-        config.add_section('GROUP_LABELS')
-    config["GROUP_LABELS"].clear()
-    config.set('GROUP_LABELS', '# list labels as session1 = label1,label2,label3...')
-    config.set('GROUP_LABELS', '# labels can be different for each breakout session')
-    config.set('GROUP_LABELS', '# if no sessions listed, default lable of group1, group2, ... will be used')
-    config.set('GROUP_LABELS', '# the session key must be unique but is ignored, only the values are used')
-    for i, g in enumerate(group_labels):
-        config.set('GROUP_LABELS', f'sess{i}', ','.join(x for x in g))
-
-    if not config.has_section('SYSTEM'):
-        config.add_section('SYSTEM')
-    config["SYSTEM"].clear()
-    config.set('SYSTEM', 'sys_version', str(sys_version))
-    config.set('SYSTEM', 'sys_group_algorithm', sys_group_algorithm)
-    config.set('SYSTEM', 'sys_group_algorithm_class', sys_group_algorithm_class)
-
-    return config
-
-def remove_default_comments(config):
-    """remove the comments set up in the defaults"""
-    for s in config.sections():
-        # the key is a tuple (key, value)
-        for key in config[s].items():
-            if key[0][:1] in config._comment_prefixes:
-                config.remove_option(s, key[0])
-
-def write_ini(config):
-    """ write the ini file from the current cfg settings"""
-    with open(f"{datadir}{flnm}", 'w') as configfile:
-        config.write(configfile)
-    return config
-
-def set_event_variables(config):
-    """set the event variables from config for consistant access"""
-    global n_attendees, attendees_list, group_size, n_groups, n_sessions
-    n_attendees = config.getint('EVENT','n_attendees', fallback=n_attendees)
-    group_size = config.getint('EVENT','group_size', fallback=group_size)
-    n_groups = config.getint('EVENT','n_groups', fallback=n_groups)
-    n_sessions = config.getint('EVENT','n_sessions', fallback=n_sessions)
-
-    attendees_list = gen_attendees_list()
-    global group_labels
-    group_labels = build_group_labels()
-
-    # system parameters
-    # do not set the version from the file
-    global sys_group_algorithm, sys_group_algorithm_class
-    sys_group_algorithm = config.get('SYSTEM', 'sys_group_algorithm', fallback=sys_group_algorithm)
-    sys_group_algorithm_class = config.get('SYSTEM', 'sys_group_algorithm_class', fallback=sys_group_algorithm_class)
-    return config
-
-def gen_attendees_list() -> list:
-    """generate the list for attendees"""
-    attendees_list = [x for x in range(n_attendees)]
-    return attendees_list
-
-def build_group_labels() -> list:
-    """read group label dict and build a list of lists of the labels for each
-       group in a session
-       this removes the key from the dict and does not force a naming convention
-       in the ini file
+class ConfigParms:
+    """ read the config file and set cfg values
+        if version changes, the cfg file is read and rewritten with the new changes reflected.
+           The data values in the cfg file are perserved
     """
-    group_labels = []
-    for k, v in config['GROUP_LABELS'].items():
-        if k not in config['EVENT']:
-            group_labels.append(v.split(','))
 
-    return group_labels
+    def __init__(self, cfg_values, autorun=False):
+        """ on init, load the directory paths, if autorun read the cfg file"""
+        self.cfg_values = cfg_values
 
-def debug_print():
-    print("")
-    print(f"    wkdir: {wkdir}")
-    print(f"  inc dir: {srcdir}")
-    print(f" data dir: {datadir}")
-    print(f"file name: {flnm}")
+        global wkdir_path, wkdir, srcdir, datadir
 
-    print(config.sections())
+        # set the directories
+        if wkdir is None:
+            wkdir_path = Path(__file__).parent.parent.resolve()
+            srcdir = str(Path(__file__).resolve().parent) + os.sep
+            wkdir = str(Path(srcdir).resolve().parent) + os.sep
+            datadir = str(Path(wkdir).resolve()) + os.sep + 'data' + os.sep
 
-    # print event variables
-    print(config['EVENT'])
-    for key, val in config['EVENT'].items():
-        print(f"   {key}:{val}")
 
-    # print group labels
-    print(config['GROUP_LABELS'])
-    for key, val in config['GROUP_LABELS'].items():
-        print(f"   {key}:{val}")
+        if autorun:
+            self.run()
 
-    # print system variables
-    print(config['SYSTEM'])
-    for key, val in config['SYSTEM'].items():
-        print(f"   {key}:{val}")
 
-config = init()
+    def run(self,) -> None:
+        """ read the config file, if not found, write the default file,
+            set the values in the config module
+        """
+        global config
+        config = configparser.ConfigParser(allow_no_value=True)
+        config = self.read_config_file(config)
+
+        self.set_config_variables(config)
+
+        return
+
+    def read_config_file(self, config):
+        """read in the breakout_groups.ini file if exists or create it"""
+        if Path(f"{datadir}{cfg_flnm}").is_file():
+            config.read(f"{datadir}{cfg_flnm}")
+        else:
+            # create the default config file
+            config = self.set_default_config(config)
+            config = self.write_cfg(config)
+
+        # if the sys_version is different, write out the new config file
+        if not config.has_option('SYSTEM', 'sys_cfg_version') or sys_cfg_version != config.get('SYSTEM', 'sys_cfg_version'):
+            self.set_config_variables(config)
+            self.set_default_config(config)
+            self.write_cfg(config)
+
+        # remove comments from sections to be consistent with data from read
+        self.remove_default_comments(config)
+        return config
+
+    def set_default_config(self, config):
+        """define the default config file, adding varibles with default values """
+        for sec, vars in self.cfg_values.items():
+            # skip comments section
+            if sec == 'comments':
+                continue
+            # create the section
+            if not config.has_section(sec):
+                config.add_section(sec)
+            config[sec].clear()
+            for var in vars:
+                var_name = var[0]
+                # check for comments and add them if they exists
+                if var_name in self.cfg_values['comments']:
+                    for c in self.cfg_values['comments'][var_name]:
+                        config.set(sec, f"# {c}")
+
+                if var_name == 'm2':
+                    lm = str(globals()[var_name])
+                    dm = str(globals()['cfg_values'])
+                    a = True
+
+                # add the variable
+                if var[1] == 'l':
+                    # process list
+                    config.set(sec, var_name, ','.join(x for x in globals()[var_name]))
+                else:
+                    config.set(sec, var_name, str(globals()[var_name]))
+
+        return config
+
+    def remove_default_comments(self, config):
+        """remove the comments set up in the defaults"""
+        for s in config.sections():
+            # the key is a tuple (key, value)
+            for key in config[s].items():
+                if key[0][:1] in config._comment_prefixes:
+                    config.remove_option(s, key[0])
+
+    def write_cfg(self, config):
+        """ write the cfg file from the current cfg settings"""
+        with open(f"{datadir}{cfg_flnm}", 'w') as configfile:
+            config.write(configfile)
+        return config
+
+    def set_config_variables(self, config):
+        """set the variables from config for consistant access"""
+        for sec, vars in self.cfg_values.items():
+            # skip comments section
+            if sec == 'comments':
+                continue
+
+            for var in vars:
+                var_name = var[0]
+                # do not override the module version number
+                if var_name == 'sys_cfg_version':
+                    continue
+                # set variable from config value
+                match var[1]:
+                    case 'b':
+                        globals()[var_name] = config.getboolean(sec, var_name, fallback=globals()[var_name])
+                    case 'f':
+                        globals()[var_name] = config.getfloat(sec,var_name, fallback=globals()[var_name])
+                    case 'i':
+                        globals()[var_name] = config.getint(sec, var_name, fallback=globals()[var_name])
+                    case 'l':
+                        listitems = []
+                        list_str = config.get(sec, var_name, fallback=globals()[var_name])
+                        if type(list_str) == 'str':
+                            listitems.append(list_str.split(','))
+                        globals()[var_name] = listitems
+                    case 's':
+                        globals()[var_name] = config.get(sec, var_name, fallback=globals()[var_name])
+
+        return config
+
+    def debug_print(self, ):
+        print("")
+        print(f"    wkdir: {wkdir}")
+        print(f"  inc dir: {srcdir}")
+        print(f" data dir: {datadir}")
+        print(f"file name: {cfg_flnm}")
+        print("")
+
+        print(f"sections: {config.sections()}")
+
+        # print config variables
+        for sec, vars in config.items():
+            print(config[sec])
+            for var, val in vars.items():
+                print(f"   {var}: {val}")
+
+"""
+This module takes advantage of Python's behavior of importing the module the first time and for
+every import after the first, only a reference is passed.
+
+There are several ways to instantiate the ConfigParm class which reads the cfg file.  Pick an
+approach that you like.
+
+to autorun on the first import:
+    cp = ConfigParms(cfg_values, autorun=True)
+or
+    cp = ConfigParms(cfg_values)
+    cp.run()
+
+to control the autorun, just instantiate the class in this module
+    cp = ConfigParms(cfg_values)
+
+and then in the application code, read the parm file:
+    cfg.cp.run()
+"""
+cp = ConfigParms(cfg_values)
+# cp.run()
 

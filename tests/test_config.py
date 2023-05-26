@@ -23,6 +23,7 @@ class TestConfig(unittest.TestCase):
            os.mkdir(cls.testfile_path)
 
         cfg.datadir = cls.testfile_path
+        cfg.cp.run()
         return
 
     @classmethod
@@ -51,57 +52,49 @@ class TestConfig(unittest.TestCase):
         """test set_default_config """
 
         # load the default values
-        config = cfg.read_config_file(cfg.config)
+        config = cfg.cp.read_config_file(cfg.config)
         # When experienting with different config value,
         #    might not pass.
-        assert cfg.n_attendees == 11
-        assert cfg.group_size == 3
-        assert cfg.n_groups == 3
-        assert cfg.n_sessions == 4
+        assert cfg.var1 == True
+        assert cfg.m1 == 'textm1'
 
 
     def test_adding_new_data_item(self,):
         """test add new data item  """
-        print("test adding")
         def prt_file(data_dir, flnm):
             with open(f"{data_dir}{flnm}", 'r') as cf:
                fdata = cf.read()
             print(fdata)
 
         # load the default values
-        config = cfg.read_config_file(cfg.config)
-        orig_version = config.get("SYSTEM", "sys_version")
+        config = cfg.cp.read_config_file(cfg.config)
+        orig_version = config.get("SYSTEM", "sys_cfg_version")
         # print("initial default ini file")
-        prt_file(cfg.datadir, cfg.flnm)
+        prt_file(cfg.datadir, cfg.cfg_flnm)
 
         # remove items from config & change version
         new_version = "0.0.0"
-        config.remove_option('EVENT', 'n_attendees')
-        config.remove_option("SYSTEM", "sys_group_algorithm")
-        config.set("SYSTEM","sys_version", new_version)
-        config = cfg.write_ini(config)
-        config = cfg.set_event_variables(config)
-        # print("ini file with missing variables")
-        # prt_file(base_dir, cfg.flnm)
-        # confirm ini file version has been reset and n_attendees removed
-        assert(config.has_option("EVENT", "n_attendees") == False)
-        assert(config.has_option("SYSTEM", "sys_group_algorithm") == False)
+        config.remove_option('MAIN', 'var2')
+        config.remove_option("SYSTEM", "sys_var")
+        config.set("SYSTEM","sys_cfg_version", new_version)
+        config = cfg.cp.write_cfg(config)
+        config = cfg.cp.set_config_variables(config)
+        # confirm  var2 has been removed
+        assert(config.has_option("MAIN", "var2") == False)
+        assert(config.has_option("SYSTEM", "sys_var") == False)
 
         # read and build missing options
-        config = cfg.read_config_file(cfg.config)
-        # print("rebuild with new variable")
-        # prt_file(base_dir, cfg.flnm)
-        # confirm options are added back when missing
-        assert(orig_version == cfg.sys_version)
-        assert(config.has_option("EVENT", "n_attendees") == True)
-        assert(config.has_option("SYSTEM", "sys_group_algorithm") == True)
+        config = cfg.cp.read_config_file(cfg.config)
+        assert(orig_version == cfg.sys_cfg_version)
+        assert(config.has_option("MAIN", "var2") == True)
+        assert(config.has_option("SYSTEM", "sys_var") == True)
 
     def test_remove_default_comments(config_defaults):
          """test remove_default_comments """
          pass
 
-    def test_write_ini(config_defaults):
-      """test write on ini_file"""
+    def test_write_cfg(config_defaults):
+      """test write cfg_file"""
       pass
 
 
