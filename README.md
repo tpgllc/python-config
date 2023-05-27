@@ -14,8 +14,14 @@ This module is has several functions:
     B[Config Module] -.- C
     C[[ConfigParms]] <-- Read/Write --> A
 ```
+## This Repo ##
 
-## Implementation
+This repo contains *`src/config.py`* and *`tests/test_config.py`*.  It also has the default project structure showing where files are located and a simple program *`config_parms.py`* which demonstrated how to use the config module.
+
+After running config_parms a test_config.cfg file is created in the data folder.  If the project structure is different, then modify the *__init__* function of the ConfigParms class to accomodate the file structure of the project.
+
+
+## Implementation ##
 
 The module should be imported as the first application module in each application module.
 
@@ -39,7 +45,7 @@ Two programs from this repo are needed:
 
 config.py contains the application run parameters and a class ConfigParms which manages the config file.  It reads a xxxxx.cfg file from the data folder.  If the file does not exist, it is created.  The xxxxx.cfg file is not managed by git so changing values in the xxxxx.cfg file does not flag a git change.
 
-It is intended for the config.py file to be modified for the application.  Parameters unique to the application are defined with their defaults.  Replace the var1-3 and m1-2 variables with the variables needed by the application.
+It is intended for the config.py file to be modified for the application.  Parameters unique to the application are defined with their defaults.  Replace the *var1-3* and *m1-2* variables with the variables needed by the application.  Also set the cfg filename (*cfg_flnm*).
 
 The *`sys_cfg_version`* variable must not be deleted, it will be updated as new parameters are added to the config file and the change in this value triggers the rewrite of the file.
 
@@ -52,5 +58,5 @@ The tests (unittest) should be run to ensure any changes have not broken the mod
 ### Summary of set up ###
 * Copy or clone the repository to your local system.
 * Extract the src/config.py and tests/test_config.py and place in your project file
-* Modify these modules for your application
+* Modify these modules for your application (set the config file name and variables)
 * Run the test
