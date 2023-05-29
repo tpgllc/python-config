@@ -59,7 +59,7 @@ class ConfigParms:
            The data values in the cfg file are perserved
     """
 
-    def __init__(self, cfg_values, autorun=False):
+    def __init__(self, cfg_values=cfg_values, autorun=False):
         """ on init, load the directory paths, if autorun read the cfg file"""
         self.cfg_values = cfg_values
 
