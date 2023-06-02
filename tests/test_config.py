@@ -89,13 +89,16 @@ class TestConfig(unittest.TestCase):
         assert(config.has_option("MAIN", "var2") == True)
         assert(config.has_option("SYSTEM", "sys_var") == True)
 
-    def test_remove_default_comments(config_defaults):
-         """test remove_default_comments """
-         pass
+    def test_remove_default_comments(self,):
+        """test remove_default_comments """
+        # load the default values
+        config = cfg.cp.set_default_config(cfg.config)
+        comments = dict((k, v) for k, v in config['DATA'].items() if k.startswith('#'))
+        cfg.cp.remove_default_comments(cfg.config)
 
-    def test_write_cfg(config_defaults):
-      """test write cfg_file"""
-      pass
+        for k in comments.keys():
+            assert(config.has_option("DATA", k) == False)
+
 
 
 if __name__ == '__main__':
