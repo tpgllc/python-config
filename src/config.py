@@ -28,7 +28,7 @@ var1 = True
 var2 = 2
 var3 = 3.4
 m1 ='textm1'
-m2 = ['m2-1', 'm2-2', 'm2-3']
+m2 = ['m2-1','m2-2','m2-3']
 
 # system variables
 sys_cfg_version = '0.1'
@@ -41,11 +41,13 @@ sys_var = "sysvar test variable"
 cfg_values = {'MAIN': [('var1', 'b'), ('var2', 'i'), ('var3', 'f')],
               'DATA': [('m1', 's'), ('m2', 'l')],
               'SYSTEM': [('sys_cfg_version', 's'), ('sys_var', 's')],
-              'comments': {'sys_cfg_version': ['changing the version number will cause file to be rewritten'],
-                           'sys_var': ['sys var cmt1', 'sys var cmt2'],
-                           'var1': ['this is a comment for var1'],
-                           'm2': ['m2 comment 1', 'm2 comment 2']}
               }
+cfg_comments = {'sys_cfg_version': ['changing the version number will cause file to be rewritten'],
+                'sys_var': ['sys var cmt1', 'sys var cmt2'],
+                'var1': ['this is a comment for var1'],
+                'm2': ['m2 comment 1', 'm2 comment 2'],
+                'DATA': ['sec comment 1', 'sec comment 2']
+                }
 
 
 # config obj
@@ -59,9 +61,10 @@ class ConfigParms:
            The data values in the cfg file are perserved
     """
 
-    def __init__(self, cfg_values=cfg_values, autorun=False):
+    def __init__(self, cfg_values=cfg_values, cfg_comments=cfg_comments, autorun=False):
         """ on init, load the directory paths, if autorun read the cfg file"""
         self.cfg_values = cfg_values
+        self.cfg_comments = cfg_comments
 
         global wkdir_path, wkdir, srcdir, datadir
 
@@ -104,6 +107,9 @@ class ConfigParms:
             self.set_default_config(config)
             self.write_cfg(config)
 
+        # verify all attributes are present in config
+        self.verify_config_attributes(config)
+
         # remove comments from sections to be consistent with data from read
         self.remove_default_comments(config)
         return config
@@ -124,34 +130,23 @@ class ConfigParms:
             if not config.has_section(sec):
                 config.add_section(sec)
             config[sec].clear()
+            self.check_for_comments(sec)
+
             for var in vars:
                 var_name = var[0]
                 # check for comments and add them if they exists
-                if var_name in self.cfg_values['comments']:
-                    for c in self.cfg_values['comments'][var_name]:
-                        config.set(sec, f"# {c}")
-
-                if var_name == 'm2':
-                    lm = str(globals()[var_name])
-                    dm = str(globals()['cfg_values'])
-                    a = True
+                self.check_for_comments(sec, var_name)
 
                 # add the variable
                 if var[1] == 'l':
-                    # process list
-                    config.set(sec, var_name, ','.join(x for x in globals()[var_name]))
+                    # process list - convert to string
+                    listitems = (globals()[var_name])
+                    list_str = ",".join(x for x in listitems)
+                    config.set(sec, var_name, list_str)
                 else:
                     config.set(sec, var_name, str(globals()[var_name]))
 
         return config
-
-    def remove_default_comments(self, config):
-        """remove the comments set up in the defaults"""
-        for s in config.sections():
-            # the key is a tuple (key, value)
-            for key in config[s].items():
-                if key[0][:1] in config._comment_prefixes:
-                    config.remove_option(s, key[0])
 
     def set_config_variables(self, config):
         """set the variables from config for consistant access"""
@@ -174,10 +169,11 @@ class ConfigParms:
                     case 'i':
                         globals()[var_name] = config.getint(sec, var_name, fallback=globals()[var_name])
                     case 'l':
+                        # convert string to list
                         listitems = []
                         list_str = config.get(sec, var_name, fallback=globals()[var_name])
-                        if type(list_str) == 'str':
-                            listitems.append(list_str.split(','))
+                        if isinstance(list_str, str):
+                            listitems = list_str.split(',')
                         else:
                             # if list_str not str, then it is the fallback list
                             listitems = list_str
@@ -186,6 +182,48 @@ class ConfigParms:
                         globals()[var_name] = config.get(sec, var_name, fallback=globals()[var_name])
 
         return config
+
+    def check_for_comments(self, sec, var_name=None):
+        """set comments in config, if they exist for a sec or variable,
+            comments are set after a section and before a variable
+            comments will be written to file, then removed from config later
+        """
+        if var_name is None:
+            if sec in self.cfg_comments.keys():
+                for c in self.cfg_comments[sec]:
+                    config.set(sec, f"# {c}")
+        else:
+            if var_name in self.cfg_comments.keys():
+                for c in self.cfg_comments[var_name]:
+                    config.set(sec, f"# {c}")
+
+    def remove_default_comments(self, config):
+        """remove the comments set up in the defaults"""
+        for s in config.sections():
+            # the key is a tuple (key, value)
+            for key in config[s].items():
+                if key[0][:1] in config._comment_prefixes:
+                    config.remove_option(s, key[0])
+
+    def verify_config_attributes(self, config):
+        """verify all attributes are present in config"""
+        for sec, vars in self.cfg_values.items():
+            # create the section
+            if not config.has_section(sec):
+                config.add_section(sec)
+
+            for var in vars:
+                var_name = var[0]
+                # if variable does not exist
+                if not config.has_option(sec, var_name):
+                    # add the variable
+                    if var[1] == 'l':
+                        # process list - convert to string
+                        listitems = (globals()[var_name])
+                        list_str = ",".join(x for x in listitems)
+                        config.set(sec, var_name, list_str)
+                    else:
+                        config.set(sec, var_name, str(globals()[var_name]))
 
     def debug_print(self, ):
         print("")
@@ -204,24 +242,26 @@ class ConfigParms:
                 print(f"   {var}: {val}")
 
 """
-This module takes advantage of Python's behavior of importing the module the first time and for
-every import after the first, only a reference is passed.
+This module takes advantage of Python's behavior of importing the module the
+first time and for every import after the first, only a reference is passed.
 
-There are several ways to instantiate the ConfigParm class which reads the cfg file.  Pick an
-approach that you like.
+There are several ways to instantiate the ConfigParm class which reads the
+cfg file.  Pick an approach that you like.
+
+Note that setting the autorun may effect tests as the defaults from the
+config file are loaded and the test defaults must be reset.
 
 to autorun on the first import:
-    cp = ConfigParms(cfg_values, autorun=True)
+    cp = ConfigParms(cfg_values, cfg_comments, autorun=True)
 or
-    cp = ConfigParms(cfg_values)
+    cp = ConfigParms(cfg_values, cfg_comments)
     cp.run()
 
 to control the autorun, just instantiate the class in this module
-    cp = ConfigParms(cfg_values)
+    cp = ConfigParms(cfg_values, cfg_comments)
 
-and then in the application code, read the parm file:
+then in the application code, with the first import, read the parm file:
     cfg.cp.run()
 """
-cp = ConfigParms(cfg_values)
-# cp.run()
+cp = ConfigParms(cfg_values, cfg_comments)
 
