@@ -75,6 +75,8 @@ class ConfigParms:
             wkdir = str(Path(srcdir).resolve().parent) + os.sep
             datadir = str(Path(wkdir).resolve()) + os.sep + 'data' + os.sep
 
+        global config
+        config = configparser.ConfigParser(allow_no_value=True)
 
         if autorun:
             self.run()
@@ -85,7 +87,7 @@ class ConfigParms:
             set the values in the config module
         """
         global config
-        config = configparser.ConfigParser(allow_no_value=True)
+        # config = configparser.ConfigParser(allow_no_value=True)
         config = self.read_config_file(config)
 
         self.set_config_variables(config)
@@ -123,9 +125,6 @@ class ConfigParms:
     def set_default_config(self, config):
         """define the default config file, adding varibles with default values """
         for sec, vars in self.cfg_values.items():
-            # skip comments section
-            if sec == 'comments':
-                continue
             # create the section
             if not config.has_section(sec):
                 config.add_section(sec)
@@ -151,10 +150,6 @@ class ConfigParms:
     def set_config_variables(self, config):
         """set the variables from config for consistant access"""
         for sec, vars in self.cfg_values.items():
-            # skip comments section
-            if sec == 'comments':
-                continue
-
             for var in vars:
                 var_name = var[0]
                 # do not override the module version number
@@ -242,8 +237,8 @@ class ConfigParms:
                 print(f"   {var}: {val}")
 
 """
-This module takes advantage of Python's behavior of importing the module the
-first time and for every import after the first, only a reference is passed.
+This module takes advantage of Python's behavior of importing the module
+the first time and for every import after the first, only a reference is passed.
 
 There are several ways to instantiate the ConfigParm class which reads the
 cfg file.  Pick an approach that you like.
@@ -260,7 +255,7 @@ or
 to control the autorun, just instantiate the class in this module
     cp = ConfigParms(cfg_values, cfg_comments)
 
-then in the application code, with the first import, read the parm file:
+and then in the application code, read the parm file:
     cfg.cp.run()
 """
 cp = ConfigParms(cfg_values, cfg_comments)
