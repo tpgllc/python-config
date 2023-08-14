@@ -11,7 +11,7 @@ if __name__ == '__main__':
     """ print the config parms"""
     print("beg config_parms")
     cfg.cp.run()
-    cfg.cp.debug_print()
+    cfg.cp.print_config_vars()
     print("end config_parms")
 
 

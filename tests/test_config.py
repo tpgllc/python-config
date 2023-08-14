@@ -99,7 +99,12 @@ class TestConfig(unittest.TestCase):
         for k in comments.keys():
             assert(config.has_option("DATA", k) == False)
 
-
+    def test_print_config_vars(self,):
+        """test print of config vars """
+        # load the default values
+        config = cfg.cp.set_default_config(cfg.config)
+        cfg.cp.remove_default_comments(cfg.config)
+        cfg.cp.print_config_vars(heading='test of print::no fileobj')
 
 if __name__ == '__main__':
     # unittest.main()

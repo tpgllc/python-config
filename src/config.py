@@ -220,21 +220,35 @@ class ConfigParms:
                     else:
                         config.set(sec, var_name, str(globals()[var_name]))
 
-    def debug_print(self, ):
-        print("")
-        print(f"    wkdir: {wkdir}")
-        print(f"  inc dir: {srcdir}")
-        print(f" data dir: {datadir}")
-        print(f"file name: {cfg_flnm}")
-        print("")
+    def print_config_vars(self, heading=None, comments=True, fileobj=None ):
+        print("", file=fileobj)
+        if heading is not None:
+            print(f"--- {heading} ---", file=fileobj)
 
-        print(f"sections: {config.sections()}")
+        print(f"    wkdir: {wkdir}", file=fileobj)
+        print(f"  inc dir: {srcdir}", file=fileobj)
+        print(f" data dir: {datadir}", file=fileobj)
+        print(f"file name: {cfg_flnm}", file=fileobj)
+        print("", file=fileobj)
+
+        print(f"sections: {config.sections()}", file=fileobj)
 
         # print config variables
         for sec, vars in config.items():
-            print(config[sec])
+            self.print_cfg_var_comments(sec, sec=True, fileobj=fileobj)
+            print(config[sec], file=fileobj)
             for var, val in vars.items():
-                print(f"   {var}: {val}")
+                self.print_cfg_var_comments(var, fileobj=fileobj)
+                print(f"   {var}: {val}", file=fileobj)
+
+    def print_cfg_var_comments(self, var, sec=False, fileobj=None):
+        """look for comments for the var (sec or var)"""
+        if var in self.cfg_comments.keys():
+                for c in self.cfg_comments[var]:
+                    if sec:
+                        print(f"# {c}", file=fileobj)
+                    else:
+                        print(f"   # {c}", file=fileobj)
 
 """
 This module takes advantage of Python's behavior of importing the module
