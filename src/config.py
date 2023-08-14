@@ -235,10 +235,12 @@ class ConfigParms:
 
         # print config variables
         for sec, vars in config.items():
-            self.print_cfg_var_comments(sec, sec=True, fileobj=fileobj)
+            if comments:
+                self.print_cfg_var_comments(sec, sec=True, fileobj=fileobj)
             print(config[sec], file=fileobj)
             for var, val in vars.items():
-                self.print_cfg_var_comments(var, fileobj=fileobj)
+                if comments:
+                    self.print_cfg_var_comments(var, fileobj=fileobj)
                 print(f"   {var}: {val}", file=fileobj)
 
     def print_cfg_var_comments(self, var, sec=False, fileobj=None):

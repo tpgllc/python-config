@@ -105,6 +105,8 @@ class TestConfig(unittest.TestCase):
         config = cfg.cp.set_default_config(cfg.config)
         cfg.cp.remove_default_comments(cfg.config)
         cfg.cp.print_config_vars(heading='test of print::no fileobj')
+        # print without comments
+        cfg.cp.print_config_vars(heading='test of print::no comments', comments=False)
 
 if __name__ == '__main__':
     # unittest.main()
