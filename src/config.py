@@ -8,7 +8,9 @@
 #     the config file is created in the data directory and can be modified
 #     for a specific run.
 #
-#  Copyright 2023 cswaim <cswaim@tpginc.net>
+#  Copyright 2023 cswaim <cswaim@jcrl.net>
+#  Licensed under the Apache License, Version 2.0
+#  http://www.apache.org/licenses/LICENSE-2.0
 
 # import this module as the first application module:
 #     import src.config as cfg
