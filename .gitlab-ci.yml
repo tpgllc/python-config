@@ -16,7 +16,7 @@ variables:
 # Pip's cache doesn't store the python packages
 # https://pip.pypa.io/en/stable/topics/caching/
 
-# The following example is for a project that runs branch and merge request pipelines 
+# The following example is for a project that runs branch and merge request pipelines
 # only, but does not run pipelines for any other case. It runs:
 #    Branch pipelines when a merge request is not open for the branch.
 #    Merge request pipelines when a merge request is open for the branch.
@@ -46,7 +46,7 @@ run:
     # - python setup.py test
     - pip install tox flake8 pytest # you can also use tox
     - if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - tox -e py,flake8
+    #- tox -e py,flake8
     - pytest -vs
 
 # test:

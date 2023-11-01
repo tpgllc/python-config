@@ -3,7 +3,9 @@
 #
 #  config_parms.py
 #
-#  Copyright 2023 cswaim <cswaim@tpginc.net>
+#  Copyright 2023 cswaim <cswaim@jcrl.net>
+#  Licensed under the Apache License, Version 2.0
+#  http://www.apache.org/licenses/LICENSE-2.0
 
 from src import config as cfg
 

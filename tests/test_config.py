@@ -4,11 +4,12 @@
 #  test_config.py
 #
 #  Copyright 2023 cswaim <cswaim@jcrl.net>
+#  Licensed under the Apache License, Version 2.0
+#  http://www.apache.org/licenses/LICENSE-2.0
 
 import unittest
 import os
 from src import config as cfg
-from numpy import testing as npt
 
 class TestConfig(unittest.TestCase):
     """ tests for the """
