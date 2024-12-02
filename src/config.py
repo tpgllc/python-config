@@ -89,7 +89,8 @@ class ConfigParms:
             set the values in the config module
         """
         global config
-        # config = configparser.ConfigParser(allow_no_value=True)
+        # the config is a ConfigParser object, and can be
+        # updated by read_config_file, so it is returned
         config = self.read_config_file(config)
 
         self.set_config_variables(config)
@@ -97,7 +98,7 @@ class ConfigParms:
         return
 
     def read_config_file(self, config):
-        """read in the breakout_groups.ini file if exists or create it"""
+        """read in the config file if exists or create it"""
         if Path(f"{datadir}{cfg_flnm}").is_file():
             config.read(f"{datadir}{cfg_flnm}")
         else:
